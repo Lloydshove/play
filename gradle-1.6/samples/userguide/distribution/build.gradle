@@ -1,0 +1,41 @@
+apply plugin: 'distribution'
+
+version = '1.0.0'
+
+distributions {
+    main {
+        baseName = 'my-name'
+    }
+}
+
+apply plugin: 'distribution'
+
+distributions {
+    custom
+}
+
+customDistZip {
+    from "custom/custom.txt"
+}
+
+apply plugin: 'distribution'
+
+distributions {
+    main {
+        baseName = 'someName'
+        contents {
+            from { 'src/dist' }
+        }
+    }
+}
+
+apply plugin: 'distribution'
+
+version = '1.2'
+distributions {
+    custom {
+        contents {
+            from { 'src/dist' }
+        }
+    }
+}

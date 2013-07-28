@@ -1,0 +1,111 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter&nbsp;53.&nbsp;C++ Support</title><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="base.css"><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="docs.css"><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="userguide.css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle User Guide"><link rel="up" href="userguide.html" title="Gradle User Guide"><link rel="prev" href="signing_plugin.html" title="Chapter&nbsp;52.&nbsp;The Signing Plugin"><link rel="next" href="build_lifecycle.html" title="Chapter&nbsp;54.&nbsp;The Build Lifecycle"></head><body><div class="navheader"><div><div class="navbar"><a xmlns:xslthl="http://xslthl.sf.net" href="signing_plugin.html" title="Chapter&nbsp;52.&nbsp;The Signing Plugin">Previous</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="userguide.html" title="Gradle User Guide">Contents</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="build_lifecycle.html" title="Chapter&nbsp;54.&nbsp;The Build Lifecycle">Next</a></div></div></div><div class="chapter"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="cpp"></a>Chapter&nbsp;53.&nbsp;C++ Support</h1></div></div></div><div class="note"><p>
+            The Gradle C++ support is currently <a class="link" href="feature_lifecycle.html">incubating</a>. Please be aware that the DSL and other configuration may change in later Gradle versions.
+        </p></div><p>
+        The C++ plugins add support for building software comprised of C++ source code, and managing the process of building &ldquo;native&rdquo; software in general.
+        While many excellent build tools exist for this space of software development, Gradle brings the dependency management practices more traditionally
+        found in the JVM development space to C++ developers.
+    </p><p>
+        The following platforms are supported:
+    </p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><div class="table-contents"><table id="N15431">
+            <tr><td>Operating System</td><td>Compiler</td><td>Notes</td></tr>
+        <tr>
+            <td>Linux</td><td><a class="ulink" href="http://gcc.gnu.org/" target="_top">GCC</a></td><td>Tested with GCC 4.6.1 on Ubuntu 11.10</td>
+        </tr><tr>
+            <td>Mac OS X</td><td><a class="ulink" href="http://gcc.gnu.org/" target="_top">GCC</a></td><td>Tested with XCode 4.2.1 on OS X 10.7</td>
+        </tr><tr>
+            <td>Windows</td><td><a class="ulink" href="http://www.microsoft.com/visualstudio/en-us" target="_top">Visual C++</a></td><td>Tested with Windows 7 and Visual C++ 2010</td>
+        </tr><tr>
+            <td>Windows</td><td><a class="ulink" href="http://www.mingw.org/" target="_top">MinGW</a></td><td>Tested with Windows 7 and MinGW 4.6.2. Note: G++ support is currently broken under cygwin</td>
+        </tr></table></div></div><p>
+        Currently, there is no direct support for creating multiple variants of the same binary (e.g. 32 bit vs. 64 bit) and there is no direct
+        support for cross platform source configuration (&agrave; la <a class="ulink" href="http://www.gnu.org/s/autoconf/" target="_top">autoconf</a>) at this time. Support for different
+        compiler chains, managing multiple variants and cross platform source configuration will be added over time, making Gradle a fully capable build tool for C++
+        (and other &ldquo;native&rdquo; language) projects.
+    </p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N1546E"></a>53.1.&nbsp;Usage</h2></div></div></div><p>
+            The build scripts DSLs, model elements and tasks used to manage C++ projects are added by the <code class="literal">cpp</code> plugin. However, it is typically
+            more convenient to use either the <code class="literal">cpp-lib</code> or <code class="literal">cpp-exe</code> plugins that sit on top of the <code class="literal">cpp</code>
+            plugin to preconfigure the project to build either a shared library or executable binary respectively.
+        </p><div class="example"><a name="useCppExePlugin"></a><p class="title"><b>Example&nbsp;53.1.&nbsp;Using the 'cpp-exe' plugin</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"cpp-exe"</span></pre></div></div><br class="example-break"><div class="example"><a name="useCppLibPlugin"></a><p class="title"><b>Example&nbsp;53.2.&nbsp;Using the 'cpp-lib' plugin</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"cpp-lib"</span></pre></div></div><br class="example-break"><p>
+            The <code class="literal">cpp-exe</code> plugin configures the project to build a single executable (at <code class="filename"><em class="replaceable"><code>$buildDir</code></em>/binaries/<em class="replaceable"><code>$project.name</code></em></code>) and
+            the <code class="literal">cpp-lib</code> plugin configures the project to build a single shared library (at <code class="filename"><em class="replaceable"><code>$buildDir</code></em>/binaries/lib<em class="replaceable"><code>$project.name</code></em>.so</code>).
+        </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N154AA"></a>53.2.&nbsp;Source code locations</h2></div></div></div><p>
+            Both plugins configure the project to look for <code class="filename">.cpp</code> and <code class="filename">.c</code> source files in <code class="filename">src/main/cpp</code> and use the <code class="filename">src/main/headers</code>
+            directory as a header include root. For a library, the header files in <code class="filename">src/main/headers</code> are considered the &ldquo;public&rdquo; or &ldquo;exported&rdquo; headers.
+            Header files that should not be exported (but are used internally) should be placed inside the <code class="filename">src/main/cpp</code> directory (though be aware that
+            such header files should always be referenced in a manner relative to the file including them).
+        </p><p>
+            The <code class="literal">cpp</code> plugin is also very flexible in where it looks for source and header files, aand you can configure the above conventions to look however you
+            like.
+        </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N154C6"></a>53.3.&nbsp;Compiling</h2></div></div></div><p>
+            For both the <code class="literal">cpp-lib</code> and <code class="literal">cpp-exe</code> plugins, you can run <strong class="userinput"><code>gradle compileMain</code></strong> to compile and link the binary.
+        </p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="N154D4"></a>53.3.1.&nbsp;Compiling on UNIX</h3></div></div></div><p>
+                The UNIX C++ support is currently based on the <code class="literal">g++</code> tool which must be installed and on the <code class="literal">PATH</code>
+                for the Gradle process.
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="N154DF"></a>53.3.2.&nbsp;Compiling on Windows</h3></div></div></div><p>
+                The Windows C++ support can use either the MinGW <code class="literal">g++</code> or the Microsoft Visual C++ <code class="literal">cl</code> tool, either of which must be installed and on the
+                <code class="literal">PATH</code> for the Gradle process. Gradle searches first for Microsoft Visual C++, and then MinGW.
+            </p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N154ED"></a>53.4.&nbsp;Configuring the compiler</h2></div></div></div><p>Arbitrary arguments can be provided to the compiler by using the following syntax:</p><div class="example"><a name="gppArgs"></a><p class="title"><b>Example&nbsp;53.3.&nbsp;Supplying arbitrary args to the compiler</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">executables {
+    main {
+        spec {
+            args <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"-fno-access-control"</span>, <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"-fconserve-space"</span>
+        }
+    }
+}</pre></div></div><br class="example-break"><p>
+            The above example applies to the <code class="literal">cpp-exe</code> plugin, to supply arguments for the <code class="literal">cpp-lib</code> plugin replace
+            &ldquo;<code class="literal">executables</code>&rdquo; with &ldquo;<code class="literal">libraries</code>&rdquo;.
+        </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N1550A"></a>53.5.&nbsp;Working with shared libraries</h2></div></div></div><p>
+            The C++ plugin provides an <code class="literal">installMain</code> task, which creates a development install of the executable, along with the shared libraries it requires.
+            This allows you to run the executable without needing to install the shared libraries in their final locations.
+        </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N15512"></a>53.6.&nbsp;Dependencies</h2></div></div></div><p>
+            Dependencies for C++ projects are binary libraries that export header files. The header files are used during compilation, with the compiled
+            binary dependency being used during the linking.
+        </p><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="N15517"></a>53.6.1.&nbsp;External Dependencies</h3></div></div></div><p>
+                External dependencies (i.e. from a repository, not a subproject) must be specified using the following syntax:
+            </p><div class="example"><a name="gppArgs"></a><p class="title"><b>Example&nbsp;53.4.&nbsp;Declaring dependencies</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">cpp {
+    sourceSets {
+        main {
+            dependency group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"some-org"</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"some-lib"</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"1.0"</span>
+        }
+    }
+}</pre></div></div><br class="example-break"><p>
+                Each dependency must be specified with the <code class="literal">dependency</code> method as above and must be declared as part of the source set. The
+                <code class="literal">group</code>, <code class="literal">name</code> and <code class="literal">version</code> arguments <span class="emphasis"><em>must</em></span> be supplied.
+            </p><p>
+                For each declared dependency, two actual dependencies are created. One with the classifier &ldquo;<code class="literal">headers</code>&rdquo; and extension
+                &ldquo;<code class="literal">zip</code>&rdquo; which is a zip file of the exported headers, and another with the classifier &ldquo;<code class="literal">so</code>&rdquo; and extension
+                &ldquo;<code class="literal">so</code>&rdquo; which is the compiled library binary to link against (which is supplied as a direct input to the g++ link operation).
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="N15545"></a>53.6.2.&nbsp;Project Dependencies</h3></div></div></div><p>
+                The notation for project dependencies is slightly different.
+            </p><div class="example"><a name="cppProjectDependencies"></a><p class="title"><b>Example&nbsp;53.5.&nbsp;Declaring project dependencies</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":lib"</span>) {
+    apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"cpp-lib"</span>
+}
+
+project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":exe"</span>) {
+    apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"cpp-exe"</span>
+    cpp {
+        sourceSets {
+            main {
+                libs &lt;&lt; project(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">":lib"</span>).libraries.main
+            }
+        }
+    }
+}</pre></div></div><br class="example-break"></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N15554"></a>53.7.&nbsp;Publishing</h2></div></div></div><p>
+            The <code class="literal">cpp-exe</code> and <code class="literal">cpp-lib</code> plugins configure their respective output binaries to be publishable as part of the
+            <code class="literal">archives</code> configuration. To publish, simply configure the <code class="literal">uploadArchives</code> task as per usual.
+        </p><div class="example"><a name="cppPublish"></a><p class="title"><b>Example&nbsp;53.6.&nbsp;Uploading exe or lib</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">group = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"some-org"</span>
+archivesBaseName = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"some-lib"</span>
+version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-number">1.0</span>
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">"${buildDir}/repo"</span>))
+        }
+    }
+}</pre></div></div><br class="example-break"><p>
+            The <code class="literal">cpp-exe</code> plugin publishes a single artifact with extension &ldquo;<code class="literal">exe</code>&rdquo;. The <code class="literal">cpp-lib</code> plugin
+            publishes two artifacts; one with classifier &ldquo;<code class="literal">headers</code>&rdquo; and extension &ldquo;<code class="literal">zip</code>&rdquo;, and one with classifier
+            &ldquo;<code class="literal">so</code>&rdquo; and extension &ldquo;<code class="literal">so</code>&rdquo; (which is the format used when consuming dependencies).
+        </p><div class="note"><p>
+                Currently, there is no support for publishing the dependencies of artifacts in POM or Ivy files. Future versions will support this.
+            </p></div></div></div><div class="navfooter"><div><div class="navbar"><a xmlns:xslthl="http://xslthl.sf.net" href="signing_plugin.html" title="Chapter&nbsp;52.&nbsp;The Signing Plugin">Previous</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="userguide.html" title="Gradle User Guide">Contents</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="build_lifecycle.html" title="Chapter&nbsp;54.&nbsp;The Build Lifecycle">Next</a></div></div></div></body></html>

@@ -1,0 +1,123 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter&nbsp;56.&nbsp;Writing Custom Task Classes</title><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="base.css"><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="docs.css"><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="userguide.css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle User Guide"><link rel="up" href="userguide.html" title="Gradle User Guide"><link rel="prev" href="multi_project_builds.html" title="Chapter&nbsp;55.&nbsp;Multi-project Builds"><link rel="next" href="incremental_tasks.html" title="Chapter&nbsp;57.&nbsp;Incremental Tasks"></head><body><div class="navheader"><div><div class="navbar"><a xmlns:xslthl="http://xslthl.sf.net" href="multi_project_builds.html" title="Chapter&nbsp;55.&nbsp;Multi-project Builds">Previous</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="userguide.html" title="Gradle User Guide">Contents</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="incremental_tasks.html" title="Chapter&nbsp;57.&nbsp;Incremental Tasks">Next</a></div></div></div><div class="chapter"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="custom_tasks"></a>Chapter&nbsp;56.&nbsp;Writing Custom Task Classes</h1></div></div></div><p>Gradle supports two types of task. One such type is the simple task, where you define the task with an
+        action closure. We have seen these in <a class="xref" href="tutorial_using_tasks.html">Chapter&nbsp;6, <i>Build Script Basics</i></a>. For this type of task, the action
+        closure determines the behaviour of the task. This type of task is good for implementing one-off tasks in your
+        build script.
+    </p><p>
+        The other type of task is the enhanced task, where the behaviour is built into the task, and the task
+        provides some properties which you can use to configure the behaviour. We have seen these in
+        <a class="xref" href="more_about_tasks.html">Chapter&nbsp;15, <i>More about Tasks</i></a>. Most Gradle plugins use enhanced tasks. With enhanced tasks, you don't need
+        to implement the task behaviour as you do with simple tasks.
+        You simply declare the task and configure the task using its properties. In this way, enhanced tasks let you reuse
+        a piece of behaviour in many different places, possibly across different builds.
+    </p><p>
+        The behaviour and properties of an enhanced task is defined by the task's class. When you declare an enhanced task, you
+        specify the type, or class of the task.
+    </p><p>
+        Implementing your own custom task class in Gradle is easy.
+        You can implement a custom task class in pretty much any language you like, provided it ends up compiled to bytecode.
+        In our examples, we are going to use Groovy as the implementation language, but you could use, for example, Java
+        or Scala. In general, using Groovy is the easiest option, because the Gradle API is designed to work well with Groovy.
+    </p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N15CF4"></a>56.1.&nbsp;Packaging a task class</h2></div></div></div><p>There are several places where you can put the source for the task class.
+        </p><div class="variablelist"><dl><dt><span class="term">Build script</span></dt><dd><p>You can include the task class directly in the build script. This has the benefit that the task class is
+                        automatically compiled and included in the classpath of the build script without you having to do anything.
+                        However, the task class is not visible outside the build script, and so you cannot reuse the task class
+                        outside the build script it is defined in.
+                    </p></dd><dt><span class="term"><code class="filename">buildSrc</code> project</span></dt><dd><p>You can put the source for the task class in the
+                        <code class="filename"><em class="replaceable"><code>rootProjectDir</code></em>/buildSrc/src/main/groovy</code> directory.
+                        Gradle will take care of compiling and testing the task class and making it available on the
+                        classpath of the build script. The task class is visible to every build script used by the build.
+                        However, it is not visible outside the build, and so you cannot reuse the task class outside the
+                        build it is defined in.
+                        Using the <code class="filename">buildSrc</code> project approach keeps separate
+                        the task declaration - that is, what the task should do - from the task implementation - that is,
+                        how the task does it.</p><p>
+                        See <a class="xref" href="organizing_build_logic.html">Chapter&nbsp;59, <i>Organizing Build Logic</i></a> for more details about the <code class="filename">buildSrc</code>
+                        project.</p></dd><dt><span class="term">Standalone project</span></dt><dd><p>You can create a separate project for your task class. This project produces and
+                        publishes a JAR which you can then use in multiple builds and share with others. Generally, this JAR
+                        might include some custom plugins, or bundle several related task classes into a single library. Or
+                        some combination of the two.
+                    </p></dd></dl></div><p> In our examples, we will start with the task class in the build script, to keep things simple.
+            Then we will look at creating a standalone project.
+        </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N15D20"></a>56.2.&nbsp;Writing a simple task class</h2></div></div></div><p>To implement a custom task class, you extend <a class="ulink" href="../dsl/org.gradle.api.DefaultTask.html" target="_top"><code class="classname">DefaultTask</code></a>.
+        </p><div class="example"><a name="customTask"></a><p class="title"><b>Example&nbsp;56.1.&nbsp;Defining a custom task</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingTask <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">extends</span> DefaultTask {
+}</pre></div></div><br class="example-break"><p>This task doesn't do anything useful, so let's add some behaviour. To do so, we add a method to the task
+            and mark it with the <a class="ulink" href="../javadoc/org/gradle/api/tasks/TaskAction.html" target="_top"><code class="classname">TaskAction</code></a> annotation. Gradle will call the
+            method when the task executes. You don't have to use a method to define the behaviour for the task. You
+            could, for instance, call <code class="literal">doFirst()</code> or <code class="literal">doLast()</code> with a closure in the
+            task constructor to add behaviour.
+        </p><div class="example"><a name="customTaskWithAction"></a><p class="title"><b>Example&nbsp;56.2.&nbsp;A hello world task</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">task hello(type: GreetingTask)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingTask <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">extends</span> DefaultTask {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-annotation">@TaskAction</span>
+    def greet() {
+        println <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hello from GreetingTask'</span>
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello</code></strong></p><pre class="screen">&gt; gradle -q hello
+hello from GreetingTask</pre></div></div><br class="example-break"><p>Let's add a property to the task, so we can customize it. Tasks are simply POGOs, and when you declare a
+            task, you can set the properties or call methods on the task object. Here we add a <code class="literal">greeting</code>
+            property, and set the value when we declare the <code class="literal">greeting</code> task.
+        </p><div class="example"><a name="customTaskWithProperty"></a><p class="title"><b>Example&nbsp;56.3.&nbsp;A customizable hello world task</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Use the default greeting</span>
+task hello(type: GreetingTask)
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-comment">// Customize the greeting</span>
+task greeting(type: GreetingTask) {
+    greeting = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'greetings from GreetingTask'</span>
+}
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingTask <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">extends</span> DefaultTask {
+    def String greeting = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hello from GreetingTask'</span>
+
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-annotation">@TaskAction</span>
+    def greet() {
+        println greeting
+    }
+}</pre><p>Output of <strong class="userinput"><code>gradle -q hello greeting</code></strong></p><pre class="screen">&gt; gradle -q hello greeting
+hello from GreetingTask
+greetings from GreetingTask</pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N15D69"></a>56.3.&nbsp;A standalone project</h2></div></div></div><p>Now we will move our task to a standalone project, so we can publish it and share it with others.
+            This project is simply a Groovy project that produces a JAR containing the task class.
+            Here is a simple build script for the project. It applies the Groovy plugin, and adds the Gradle API
+            as a compile-time dependency.
+        </p><div class="example"><a name="customTaskStandalone"></a><p class="title"><b>Example&nbsp;56.4.&nbsp;A build for a custom task</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'groovy'</span>
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+}</pre><div class="exampleLocation"><p><span class="emphasis"><em>Note:</em></span> The code for this example can be found at <code class="filename">samples/customPlugin/plugin</code> which is in both the binary and source distributions of Gradle.</p></div></div></div><br class="example-break"><p>We just follow the convention for where the source for the task class should go.</p><div class="example"><a name="customTaskStandalone"></a><p class="title"><b>Example&nbsp;56.5.&nbsp;A custom task</b></p><div class="example-contents"><p><code class="filename">src/main/groovy/org/gradle/GreetingTask.groovy</code></p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">package</span> org.gradle
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">import</span> org.gradle.api.DefaultTask
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">import</span> org.gradle.api.tasks.TaskAction
+
+<span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingTask <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">extends</span> DefaultTask {
+    String greeting = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'hello from GreetingTask'</span>
+
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-annotation">@TaskAction</span>
+    def greet() {
+        println greeting
+    }
+}</pre></div></div><br class="example-break"><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="N15D8D"></a>56.3.1.&nbsp;Using your task class in another project</h3></div></div></div><p>To use a task class in a build script, you need to add the class to the build script's classpath. To
+                do this, you use a <code class="literal">buildscript { }</code> block, as described in <a class="xref" href="organizing_build_logic.html#sec:external_dependencies">Section&nbsp;59.5, &ldquo;External dependencies for the build script&rdquo;</a>.
+                The following example shows how you might do this when the JAR containing the task class has been published
+                to a local repository:
+            </p><div class="example"><a name="usingCustomTask"></a><p class="title"><b>Example&nbsp;56.6.&nbsp;Using a custom task in another project</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">buildscript {
+    repositories {
+        maven {
+            url uri(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'../repo'</span>)
+        }
+    }
+    dependencies {
+        classpath group: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'org.gradle'</span>, name: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'customPlugin'</span>, version: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.0-SNAPSHOT'</span>
+    }
+}
+
+task greeting(type: org.gradle.GreetingTask) {
+    greeting = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'howdy!'</span>
+}</pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a name="N15DA2"></a>56.3.2.&nbsp;Writing tests for your task class</h3></div></div></div><p>You can use the <a class="ulink" href="../javadoc/org/gradle/testfixtures/ProjectBuilder.html" target="_top"><code class="classname">ProjectBuilder</code></a> class to create
+                <a class="ulink" href="../dsl/org.gradle.api.Project.html" target="_top"><code class="classname">Project</code></a> instances to use when you test your task class.
+            </p><div class="example"><a name="customTaskStandalone"></a><p class="title"><b>Example&nbsp;56.7.&nbsp;Testing a custom task</b></p><div class="example-contents"><p><code class="filename">src/test/groovy/org/gradle/GreetingTaskTest.groovy</code></p><pre class="programlisting"><span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">class</span> GreetingTaskTest {
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-annotation">@Test</span>
+    <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">public</span> <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">void</span> canAddTaskToProject() {
+        Project project = ProjectBuilder.builder().build()
+        def task = project.task(<span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'greeting'</span>, type: GreetingTask)
+        assertTrue(task <span xmlns:xslthl="http://xslthl.sf.net" class="hl-keyword">instanceof</span> GreetingTask)
+    }
+}</pre></div></div><br class="example-break"></div></div></div><div class="navfooter"><div><div class="navbar"><a xmlns:xslthl="http://xslthl.sf.net" href="multi_project_builds.html" title="Chapter&nbsp;55.&nbsp;Multi-project Builds">Previous</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="userguide.html" title="Gradle User Guide">Contents</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="incremental_tasks.html" title="Chapter&nbsp;57.&nbsp;Incremental Tasks">Next</a></div></div></div></body></html>

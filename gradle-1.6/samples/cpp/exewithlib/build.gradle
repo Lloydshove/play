@@ -1,0 +1,16 @@
+project(":lib") {
+    apply plugin: "cpp-lib"
+}
+
+project(":exe") {
+    apply plugin: "cpp-exe"
+    cpp {
+        sourceSets {
+            main {
+                libs << project(":lib").libraries.main
+            }
+        }
+    }
+}
+
+task build(dependsOn: project(":exe").compileMain)

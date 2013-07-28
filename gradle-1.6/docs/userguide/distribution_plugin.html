@@ -1,0 +1,72 @@
+<html><head><META http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Chapter&nbsp;44.&nbsp;The Distribution Plugin</title><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="base.css"><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="docs.css"><link xmlns:xslthl="http://xslthl.sf.net" type="text/css" rel="stylesheet" href="userguide.css"><meta content="DocBook XSL Stylesheets V1.75.2" name="generator"><link rel="home" href="userguide.html" title="Gradle User Guide"><link rel="up" href="userguide.html" title="Gradle User Guide"><link rel="prev" href="build_announcements_plugin.html" title="Chapter&nbsp;43.&nbsp;The Build Announcements Plugin"><link rel="next" href="application_plugin.html" title="Chapter&nbsp;45.&nbsp;The Application Plugin"></head><body><div class="navheader"><div><div class="navbar"><a xmlns:xslthl="http://xslthl.sf.net" href="build_announcements_plugin.html" title="Chapter&nbsp;43.&nbsp;The Build Announcements Plugin">Previous</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="userguide.html" title="Gradle User Guide">Contents</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="application_plugin.html" title="Chapter&nbsp;45.&nbsp;The Application Plugin">Next</a></div></div></div><div class="chapter"><div class="titlepage"><div><div><h1 xmlns:xslthl="http://xslthl.sf.net"><a name="distribution_plugin"></a>Chapter&nbsp;44.&nbsp;The Distribution Plugin</h1></div></div></div><div class="note"><p>
+            The distribution plugin is currently <a class="link" href="feature_lifecycle.html">incubating</a>. Please be aware that the DSL and other configuration may change in later Gradle versions.
+        </p></div><p>The distribution plugin extends the language plugins with common distribution related tasks.
+	It allows bundling a project including binaries, sources and documentation.
+	</p><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N14497"></a>44.1.&nbsp;Usage</h2></div></div></div><p>To use the distribution plugin, include in your build script:</p><div class="example"><a name="useDistributionPlugin"></a><p class="title"><b>Example&nbsp;44.1.&nbsp;Using the distribution plugin</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'distribution'</span></pre></div></div><br class="example-break"><p>To define the name for the distribution you have to set the <code class="literal">baseName</code> property as shown below</p><div class="example"><a name="configureDistributionName"></a><p class="title"><b>Example&nbsp;44.2.&nbsp;Configure the distribution name</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">distributions {
+    main {
+        baseName = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'my-name'</span>
+    }
+}</pre></div></div><br class="example-break"><p>The plugin build a distribution for your project. You can run <strong class="userinput"><code>gradle distZip</code></strong> to create a
+            ZIP containing the distribution.  Given that the project name is myproject and version is 1.2, then running gradle customDistZip will produce a ZIP file called myproject-1.2.zip
+        </p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N144BA"></a>44.2.&nbsp;Tasks</h2></div></div></div><p>The Distribution plugin adds the following tasks to the project.</p><div xmlns:xslthl="http://xslthl.sf.net" class="table"><p class="title"><b>Table&nbsp;44.1.&nbsp;Distribution plugin - tasks</b></p><div class="table-contents"><table id="N144BF"><thead><tr>
+                    <td>Task name</td>
+                    <td>Depends on</td>
+                    <td>Type</td>
+                    <td>Description</td>
+                </tr></thead><tr>
+            <td>
+                <code class="literal">distZip</code>
+            </td>
+            <td>
+                <code class="literal">-</code>
+            </td>
+            <td>
+                <a class="ulink" href="../dsl/org.gradle.api.tasks.bundling.Zip.html" target="_top"><code class="classname">Zip</code></a>
+            </td>
+                <td>Creates a full distribution ZIP archive.</td>
+            </tr><tr>
+            <td>
+               <code class="literal">distTar</code>
+            </td>
+            <td>
+               <code class="literal">-</code>
+            </td>
+            <td>
+                <a class="ulink" href="../dsl/org.gradle.api.tasks.bundling.Tar.html" target="_top"><code class="classname">Tar</code></a>
+            </td>
+                <td>Creates a full distribution TAR archive.</td>
+            </tr><tr>
+            <td>
+                <code class="literal">installDist</code>
+            </td>
+            <td>
+                <code class="literal">-</code>
+            </td>
+            <td>
+                <a class="ulink" href="../dsl/org.gradle.api.tasks.Sync.html" target="_top"><code class="classname">Sync</code></a>
+            </td>
+            <td>Install distribution contents.</td>
+            </tr></table></div></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N1451C"></a>44.3.&nbsp;Configure distributions</h2></div></div></div><p>The distribution plugin allow to configure distributions to include custom files and to change distribution baseName.
+        </p><div class="example"><a name="customDistribution"></a><p class="title"><b>Example&nbsp;44.3.&nbsp;Declare multiple distributions</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'distribution'</span>
+
+distributions {
+    main {
+        baseName = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'someName'</span>
+        contents {
+            from { <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/dist'</span> }
+        }
+    }
+}</pre></div></div><br class="example-break"></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N1452B"></a>44.4.&nbsp;Multiple distributions</h2></div></div></div><p>The distribution plugin allow to generate multiple distributions.
+
+        </p><div class="example"><a name="multipleDistribution"></a><p class="title"><b>Example&nbsp;44.4.&nbsp;Declare multiple distributions</b></p><div class="example-contents"><p><code class="filename">build.gradle</code></p><pre class="programlisting">apply plugin: <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'distribution'</span>
+
+version = <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'1.2'</span>
+distributions {
+    custom {
+        contents {
+            from { <span xmlns:xslthl="http://xslthl.sf.net" class="hl-string">'src/dist'</span> }
+        }
+    }
+}</pre></div></div><br class="example-break"><p>This will following tasks to the project : customDistZip, customDistTar, installcustomDist. Given that the project name is myproject, then running gradle customDistZip will produce a ZIP file called myproject-custom-1.2.zip
+            and running customDistTar will produce myproject-custom-1.2.tar. Running installcustomDist will install distribution contents into buildDir/install/custom.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title"><a name="N1453C"></a>44.5.&nbsp;Extension properties</h2></div></div></div><p>The distribution plugin add an extension to the project, which you can use to configure its behaviour. See <a class="ulink" href="../dsl/org.gradle.api.Project.html" target="_top"><code class="classname">Project</code></a>.
+            </p></div></div><div class="navfooter"><div><div class="navbar"><a xmlns:xslthl="http://xslthl.sf.net" href="build_announcements_plugin.html" title="Chapter&nbsp;43.&nbsp;The Build Announcements Plugin">Previous</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="userguide.html" title="Gradle User Guide">Contents</a><span>|</span><a xmlns:xslthl="http://xslthl.sf.net" href="application_plugin.html" title="Chapter&nbsp;45.&nbsp;The Application Plugin">Next</a></div></div></div></body></html>
